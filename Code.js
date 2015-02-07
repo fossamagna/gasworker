@@ -1,5 +1,4 @@
 var KEY_CONTEXT_ = "GASWorker-Context";
-var KEY_CANCELLED_ = "GASWorker-Cancelled";
 
 var STATUS_PENDING = "PENDING";
 var STATUS_STARTED = "STARTED";
@@ -8,7 +7,7 @@ var STATUS_DONE = "DONE";
 
 var config_ = {
   waitLockTimeout : 1 * 60 * 1000,
-  triggerDelay : 1 * 60 * 1000,
+  triggerMinutes : 1,
   triggerTimeout : 4 * 60 * 1000,
   callback: "doInBackground"
 }
@@ -23,18 +22,14 @@ function execute(token) {
     if (getContext_(KEY_CONTEXT_) != null && !isDone()) {
       return false;
     }
-    var cancel = {
-      cancelled : false
-    };
-    setContext_(KEY_CANCELLED_, cancel);
     var uniqueId = putNextTrigger_();
     var context = {
       status : STATUS_PENDING,
       uniqueId : uniqueId,
-      token : token
+      token : token,
+      cancelled : false
     };
     setContext_(KEY_CONTEXT_, context);
-
     return true;
   });
 }
@@ -53,53 +48,62 @@ function getProperties() {
 }
 
 function doInBackground_() {
-  callWithLock_(function() {
-    var starttime = new Date();
-    var identifier = KEY_CONTEXT_;
-    var context = getContext_(identifier);
-    var token = context.token;
-    var uniqueId = context.uniqueId;
-    
+  var identifier = KEY_CONTEXT_;
+  var starttime = new Date();
+  var token = callWithLock_(function() {
+    // 既にdoInBackground_()が実行されていないかチェック。
+    if (!canDoInBackground_(identifier)) {
+      return null;
+    }
     // update context.
+    var context = getContext_(identifier);
     context.status = STATUS_STARTED;
     context.starttime = starttime.toISOString();
     setContext_(identifier, context);
-    
-    // Run time‐consuming tasks.
-    token = doTasks(token, starttime.getTime());
-    setToken_(identifier, token);
-    
-    if (token) {
-      deleteTrigger_(uniqueId);
-      var newUniqueId = putNextTrigger_();
+    return context.token;
+  });
+  if (token == null) {
+    return;
+  }
+  // Run time-consuming tasks.
+  token = doTasks(identifier, token, starttime.getTime());
+  if (token) {
+    callWithLock_(function() {
       var context = getContext_(identifier);
-      context.uniqueId = newUniqueId;
       context.starttime = null;
       context.status = STATUS_PAUSED;
       setContext_(identifier, context);
-    } else {
-      deleteTrigger_(uniqueId);
+    });
+  } else {
+    callWithLock_(function() {
       var context = getContext_(identifier);
+      deleteTrigger_(context.uniqueId);
       context.uniqueId = null;
       context.starttime = null;
       context.status = STATUS_DONE;
       setContext_(identifier, context);
-      done();
-    }
-  });
+    });
+    done();
+  }
 }
 
-function doTasks(token, starttime) {
-  while (!isCancelled_(KEY_CANCELLED_)) {
-    if (new Date().getTime() - starttime >= config_.triggerTimeout) {
-      break;
+function doTasks(identifier, token, starttime) {
+  var nextToken;
+  while (new Date().getTime() - starttime < config_.triggerTimeout) {
+    if (isCancelled_(identifier)) {
+      return null;
     }
-    token = doTask(token);
-    if (!token) {
+    nextToken = doTask(token);
+    if (nextToken) {
+      callWithLock_(function() {
+        setToken_(identifier, nextToken);
+      });
+      token = nextToken;
+    } else {
       break;
     }
   }
-  return token;
+  return nextToken;
 }
 
 function callWithLock_(callback, waitLockTimeout) {
@@ -130,18 +134,20 @@ function deleteTrigger_(uniqueId) {
 function putNextTrigger_() {
   var trigger = ScriptApp.newTrigger(config_.callback)
     .timeBased()
-    .after(config_.triggerDelay)
+    .everyMinutes(config_.triggerMinutes)
     .create();
   return trigger.getUniqueId();
 }
 
 function cancel() {
-  var identifier = KEY_CANCELLED_;
-  setContextValue_(identifier, "cancelled", true);
+  var identifier = KEY_CONTEXT_;
+  callWithLock_(function() {
+    setContextValue_(identifier, "cancelled", true);
+  });
 }
 
 function isCancelled() {
-  return isCancelled_(KEY_CANCELLED_);
+  return isCancelled_(KEY_CONTEXT_);
 }
 
 function isCancelled_(identifier) {
@@ -187,6 +193,11 @@ function setStatus_(identifier, status) {
 
 function isDone() {
   return STATUS_DONE === getStatus_(KEY_CONTEXT_);
+}
+
+function canDoInBackground_(identifier) {
+  var status = getStatus_(identifier);
+  return status === STATUS_PAUSED || status === STATUS_PENDING;
 }
 
 function getUniqueId_(identifier) {
