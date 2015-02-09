@@ -86,7 +86,7 @@ function doInBackground_() {
     return;
   }
   // Run time-consuming tasks.
-  token = doTasks(identifier, token, starttime.getTime());
+  token = doTasks_(identifier, token, starttime.getTime());
   if (token) {
     callWithLock_(function() {
       var context = getContext_(identifier);
@@ -107,7 +107,7 @@ function doInBackground_() {
   }
 }
 
-function doTasks(identifier, token, starttime) {
+function doTasks_(identifier, token, starttime) {
   var nextToken;
   while (new Date().getTime() - starttime < config_.triggerTimeout) {
     if (isCancelled_(identifier)) {
