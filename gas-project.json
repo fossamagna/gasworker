@@ -3,7 +3,7 @@
     "fileId": "1wLXJT5bAu6IIk1nyyeSTkioSRISBkDSqaWAIHA23zJga2qtBfqb65h86",
     "files": {
       "Code": {
-        "path": "Code.js",
+        "path": "Code.gs",
         "type": "server_js"
       }
     }
