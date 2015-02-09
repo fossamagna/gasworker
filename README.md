@@ -84,7 +84,7 @@ You can use it as a [Library](https://developers.google.com/apps-script/guide_li
 
 ## Licence
 
-[MIT](https://github.com/tcnksm/tool/blob/master/LICENCE)
+[MIT](LICENCE.txt)
 
 ## Author
 
