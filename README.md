@@ -9,7 +9,7 @@ Google Apps Script have a maximum script runtime of 6 minutes of [the limitation
 
 You can use GASWorker a practical feature when you want to run the script over a long period of time beyond this limit.
 
-GASWorker achieves the execution of the script over a long period of time to ** pseudo ** by call to fit within the time limit of a long process that has been divided [time-based trigger] (https://developers.google.com/apps-script/guides/triggers/installable#time-driven_triggers).
+GASWorker achieves the execution of the script over a long period of time to ** pseudo ** by call to fit within the time limit of a long process that has been divided [time-based trigger](https://developers.google.com/apps-script/guides/triggers/installable#time-driven_triggers).
 
 User of GASWorker have to divide the processing of script to run for a long time is done.
 GASWorker calls the divided processing by using the time-based trigger.
@@ -34,9 +34,7 @@ GASWorker calls the divided processing by using the time-based trigger.
 ### Define doTask function
 
     GASWorker.doTask = function(token) {
-      var cell = SpreadsheetApp.getActiveSheet().getRange(token + 1, 1);
-      cell.setValue("doWork:" + new Date().toLocaleString() + "\n" + "token:" + token);
-      SpreadsheetApp.flush();
+      Logger.log("doWork:" + new Date().toLocaleString() + "\n" + "token:" + token);
       Utilities.sleep(10 * 1000);
       token++;
       return token < 30 ? token : null;
@@ -81,6 +79,7 @@ If you want to cancel the process that are started in `GASWorker.execute`, call 
 ## Install
 
 You can use it as a [Library](https://developers.google.com/apps-script/guide_libraries).
+
 * Project Key : MuqNCyf7bF_RkFgVvqMPBHcbdvwfOgOcF
 
 ## Licence
