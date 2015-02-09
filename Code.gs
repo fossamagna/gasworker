@@ -12,10 +12,19 @@ var config_ = {
   callback: "doInBackground"
 }
 
+/**
+ * Set up for using GASWorker.
+ * @param {Object} target global object of application script.
+ */
 function setup(target) {
   target[config_.callback] = doInBackground_;
 }
 
+/**
+ * Executes the defined task using token at some time in the future.
+ * @param {Object} token doTask function argument.
+ * @return {boolean} if the install of trigger was success, else false
+ */
 function execute(token) {
   return callWithLock_(function() {
     // 既にexecute()されていないかチェック。
@@ -34,14 +43,25 @@ function execute(token) {
   });
 }
 
+/**
+ * Executed after the defined task is finished.
+ */
 function done() {
 }
 
+/**
+ * Provide Lock object to GASWroker.
+ * @return {Lock} lock object of application script
+ */
 function getLock() {
   //return LockService.getScriptLock();
   return null;
 }
 
+/**
+ * Provide Properties object to GASWroker.
+ * @return {Properties} properties object of application script
+ */
 function getProperties() {
   //return PropertiesService.getScriptProperties();
   return null;
@@ -139,6 +159,9 @@ function putNextTrigger_() {
   return trigger.getUniqueId();
 }
 
+/**
+ * Attempts to cancel execution of this task.
+ */
 function cancel() {
   var identifier = KEY_CONTEXT_;
   callWithLock_(function() {
@@ -146,6 +169,9 @@ function cancel() {
   });
 }
 
+/**
+ * Returns true if this task was cancelled before it completed normally.
+ */
 function isCancelled() {
   return isCancelled_(KEY_CONTEXT_);
 }
@@ -191,6 +217,9 @@ function setStatus_(identifier, status) {
   return setContextValue_(identifier, "status", status);
 }
 
+/**
+ * Returns true if this task completed.
+ */
 function isDone() {
   return STATUS_DONE_ === getStatus_(KEY_CONTEXT_);
 }
