@@ -1,9 +1,9 @@
 var KEY_CONTEXT_ = "GASWorker-Context";
 
-var STATUS_PENDING = "PENDING";
-var STATUS_STARTED = "STARTED";
-var STATUS_PAUSED = "PAUSED";
-var STATUS_DONE = "DONE";
+var STATUS_PENDING_ = "PENDING";
+var STATUS_STARTED_ = "STARTED";
+var STATUS_PAUSED_ = "PAUSED";
+var STATUS_DONE_ = "DONE";
 
 var config_ = {
   waitLockTimeout : 1 * 60 * 1000,
@@ -24,7 +24,7 @@ function execute(token) {
     }
     var uniqueId = putNextTrigger_();
     var context = {
-      status : STATUS_PENDING,
+      status : STATUS_PENDING_,
       uniqueId : uniqueId,
       token : token,
       cancelled : false
@@ -57,7 +57,7 @@ function doInBackground_() {
     }
     // update context.
     var context = getContext_(identifier);
-    context.status = STATUS_STARTED;
+    context.status = STATUS_STARTED_;
     context.starttime = starttime.toISOString();
     setContext_(identifier, context);
     return context.token;
@@ -71,7 +71,7 @@ function doInBackground_() {
     callWithLock_(function() {
       var context = getContext_(identifier);
       context.starttime = null;
-      context.status = STATUS_PAUSED;
+      context.status = STATUS_PAUSED_;
       setContext_(identifier, context);
     });
   } else {
@@ -80,7 +80,7 @@ function doInBackground_() {
       deleteTrigger_(context.uniqueId);
       context.uniqueId = null;
       context.starttime = null;
-      context.status = STATUS_DONE;
+      context.status = STATUS_DONE_;
       setContext_(identifier, context);
     });
     done();
@@ -192,12 +192,12 @@ function setStatus_(identifier, status) {
 }
 
 function isDone() {
-  return STATUS_DONE === getStatus_(KEY_CONTEXT_);
+  return STATUS_DONE_ === getStatus_(KEY_CONTEXT_);
 }
 
 function canDoInBackground_(identifier) {
   var status = getStatus_(identifier);
-  return status === STATUS_PAUSED || status === STATUS_PENDING;
+  return status === STATUS_PAUSED_ || status === STATUS_PENDING_;
 }
 
 function getUniqueId_(identifier) {
@@ -215,4 +215,3 @@ function getToken_(identifier) {
 function setToken_(identifier, token) {
   return setContextValue_(identifier, "token", token);
 }
-
