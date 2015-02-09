@@ -1,4 +1,4 @@
-GASWorkder
+GASWorker
 ====
 
 GASWorker は Google Apps Script で長時間の実行を必要とするスクリプトのためのライブラリです。
