@@ -3,6 +3,8 @@ GASWorker
 
 GASWorker は Google Apps Script で長時間の実行を必要とするスクリプトのためのライブラリです。
 
+*Read this in other languages: [English](README.md), [日本語](README.ja.md).*
+
 ## Description
 
 Google Apps Script はスクリプトの最大実行時間6分の [制限](https://developers.google.com/apps-script/guides/services/quotas#current_limitations) があります。

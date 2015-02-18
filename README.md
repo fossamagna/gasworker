@@ -3,6 +3,8 @@ GASWorker
 
 GASWorker is a library for the script that requires a long run in the Google Apps Script.
 
+*Read this in other languages: [English](README.md), [日本語](README.ja.md).*
+
 ## Description
 
 Google Apps Script have a maximum script runtime of 6 minutes of [the limitations](https://developers.google.com/apps-script/guides/services/quotas#current_limitations).
