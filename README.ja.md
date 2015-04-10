@@ -34,7 +34,7 @@ GASWorker その分割された処理を時間ベースのトリガーを利用�
 
 ### Define doTask function
 
-    GASWorker.doTask = function(token) {
+    GASWorker.doTask = function(token, userContext) {
       Logger.log("doWork:" + new Date().toLocaleString() + "\n" + "token:" + token);
       Utilities.sleep(10 * 1000);
       token++;
@@ -44,13 +44,35 @@ GASWorker その分割された処理を時間ベースのトリガーを利用�
 `GASWorker.doTask` には分割した処理を定義します。
 `GASWorker.doTask` は時間ベースのトリガーから呼び出されます。
 
-`GASWorker.doTask` の戻り値は、 `GASWorker.doTask` が次に呼び出される時の引数になります。
+`GASWorker.doTask` の戻り値は、 `GASWorker.doTask` が次に呼び出される時の `token` 引数になります。
 `null`を返すと、 `GASWorker.doTask` は呼び出されなくなり、処理が終了します。
 
 引数 `token` は 最初は `GASWorker.execute()` の引数が渡されます。
 その後は、直前に呼び出された `GASWorker.doTask` の戻り値が渡されます。
 
+引数 `userContext` は任意の値を追加・変更・削除できるオブジェクトです。
+`userContext` オブジェクトの寿命は Google Apps Script
+プロセスを同じです。
+
 注意:`GASWorker.doTask`は6分以内に終了するようにしてください。
+
+### Define beforeTasks function
+
+    GASWorker.beforeTasks = function(token, userContext) {
+      Logger.log("Hook before trigger start.");
+    }
+
+`beforeTasks` 関数の定義はオプションです。
+`beforeTasks` 関数を使ってタスクの開始前のタイミングをフックできます。
+
+### Define afterTasks function
+
+    GASWorker.afterTasks = function(token, userContext) {
+      Logger.log("Hook before trigger end.");
+    }
+
+`afterTasks` 関数の定義はオプションです。
+`afterTasks` 関数を使ってタスクの終了前のタイミングをフックできます。
 
 ### Start Task
 

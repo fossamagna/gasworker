@@ -35,7 +35,7 @@ GASWorker calls the divided processing by using the time-based trigger.
 
 ### Define doTask function
 
-    GASWorker.doTask = function(token) {
+    GASWorker.doTask = function(token, userContext) {
       Logger.log("doWork:" + new Date().toLocaleString() + "\n" + "token:" + token);
       Utilities.sleep(10 * 1000);
       token++;
@@ -45,12 +45,33 @@ GASWorker calls the divided processing by using the time-based trigger.
 You can define the processes that have been divided into `GASWorker.doTask`.
 `GASWorker.doTask` will be called from time-based trigger.
 
-Return value of `GASWorker.doTask` that will be the argument of when the` GASWorker.doTask` the next call.
+Return value of `GASWorker.doTask` that will be the `token` argument of when the` GASWorker.doTask` the next call.
 If you return the `null`,` GASWorker.doTask` is no longer called, processing is terminated.
 
 Argument of `doTask` function are initially passed `GASWorker.execute ()` argument.
 
+`userContext` is object where you can use add, modify and delete any value.
+Life of userContext is same to Google Apps Script process. You can build any userContext object by to override `buildUserContext` function.
+
 Note : Process in `GASWorker.doTask` must be make to be completed within 6 minutes.
+
+### Define beforeTasks function
+
+    GASWorker.beforeTasks = function(token, userContext) {
+      Logger.log("Hook before trigger start.");
+    }
+
+It is optional that to define `beforeTasks` function.
+You can hook before start tasks using `beforeTasks` function.
+
+### Define afterTasks function
+
+    GASWorker.afterTasks = function(token, userContext) {
+      Logger.log("Hook before trigger end.");
+    }
+
+It is optional that to define `afterTasks` function.
+You can hook before end tasks using `afterTasks` function.
 
 ### Start Task
 

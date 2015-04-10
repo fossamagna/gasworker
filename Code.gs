@@ -9,7 +9,8 @@ var config_ = {
   waitLockTimeout : 1 * 60 * 1000,
   triggerMinutes : 1,
   triggerTimeout : 4 * 60 * 1000,
-  callback: "doInBackground"
+  callback: "doInBackground",
+  transactionType: 'tasks' /* task or tasks */
 }
 
 /**
@@ -41,6 +42,20 @@ function execute(token) {
     setContext_(KEY_CONTEXT_, context);
     return true;
   });
+}
+
+/**
+ * Executed before the defined task is started at an TimeBased Trigger.
+ * It is before task is resumed.
+ */
+function beforeTasks(token, userContext) {
+}
+
+/**
+ * Executed after the defined task is ended at an TimeBased Trigger.
+ * It is before task paused.
+ */
+function afterTasks(token, userContext) {
 }
 
 /**
@@ -85,44 +100,59 @@ function doInBackground_() {
   if (token == null) {
     return;
   }
-  // Run time-consuming tasks.
-  token = doTasks_(identifier, token, starttime.getTime());
-  if (token) {
-    callWithLock_(function() {
-      var context = getContext_(identifier);
-      context.starttime = null;
-      context.status = STATUS_PAUSED_;
-      setContext_(identifier, context);
-    });
-  } else {
-    callWithLock_(function() {
-      var context = getContext_(identifier);
-      deleteTrigger_(context.uniqueId);
-      context.uniqueId = null;
-      context.starttime = null;
-      context.status = STATUS_DONE_;
-      setContext_(identifier, context);
-    });
+  try {
+    token = doTasks_(identifier, token, starttime.getTime());
+  } finally {
+    if (token) {
+      callWithLock_(function() {
+        var context = getContext_(identifier);
+        context.starttime = null;
+        context.token = token;
+        context.status = STATUS_PAUSED_;
+        setContext_(identifier, context);
+      });
+    } else {
+      callWithLock_(function() {
+        var context = getContext_(identifier);
+        deleteTrigger_(context.uniqueId);
+        context.uniqueId = null;
+        context.starttime = null;
+        context.status = STATUS_DONE_;
+        setContext_(identifier, context);
+      });
+    }
     done();
   }
 }
 
 function doTasks_(identifier, token, starttime) {
+  var currentToken = token;
   var nextToken;
+  var userContext = {};
+
+  // Hook before doTasks_
+  beforeTasks(currentToken, userContext);
+
+  // Run time-consuming tasks.
   while (new Date().getTime() - starttime < config_.triggerTimeout) {
     if (isCancelled_(identifier)) {
       return null;
     }
-    nextToken = doTask(token);
+    currentToken = nextToken || token;
+    nextToken = doTask(currentToken, userContext);
     if (nextToken) {
-      callWithLock_(function() {
-        setToken_(identifier, nextToken);
-      });
-      token = nextToken;
+      if (config_.transactionType === 'task') {
+        callWithLock_(function() {
+          setToken_(identifier, nextToken);
+        });
+      }
     } else {
       break;
     }
   }
+
+  // Hook after doTasks_
+  afterTasks(currentToken, userContext);
   return nextToken;
 }
 
