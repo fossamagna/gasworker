@@ -1,0 +1,37 @@
+{
+  "name": "gasworker",
+  "version": "2.0.0",
+  "description": "GASWorker is a library for the script that requires a long run in the Google Apps Script.",
+  "main": "gasworker.js",
+  "scripts": {
+    "build": "gulp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fossamagna/gasworker.git"
+  },
+  "keywords": [
+    "Google Apps Script",
+    "GAS"
+  ],
+  "author": "fossamagna",
+  "license": {
+    "type": "MIT",
+    "url": "http://github.com/fossamagna/gasworker/blob/master/LICENSE.txt"
+  },
+  "bugs": {
+    "url": "https://github.com/fossamagna/gasworker/issues"
+  },
+  "homepage": "https://github.com/fossamagna/gasworker",
+  "devDependencies": {
+    "gulp": "^3.8.11",
+    "gulp-concat": "^2.5.2"
+  },
+  "files": [
+    "LICENSE.txt",
+    "README.md",
+    "README.ja.md",
+    "gasworker.js",
+    "package.json"
+  ]
+}
