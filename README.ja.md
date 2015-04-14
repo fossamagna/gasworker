@@ -19,36 +19,60 @@ GASWorker その分割された処理を時間ベースのトリガーを利用�
 
 ### Initialize
 
-    GASWorker.setup(this);
+```javascript
+var gwConfig = {
+  callbackTarget: this,
 
-    GASWorker.getLock = function() {
-      return LockService.getScriptLock();
-    }
+  doTask: function(token, userContext) {
+    var cell = userContext.sheet.getRange(token + 1, 1);
+    cell.setValue("doTask:" + new Date().toLocaleString() + "\n" + "token:" + token);
+    SpreadsheetApp.flush();
+    Utilities.sleep(10 * 1000);
+    token++;
+    return token < 30 ? token : null;
+  },
 
-    GASWorker.getProperties = function() {
-      return PropertiesService.getScriptProperties();
-    }
+  getProperties: function() {
+    return PropertiesService.getScriptProperties();
+  },
+  getLock: function() {
+    return LockService.getScriptLock();
+  }
+};
 
-* `GASWorker.getLock` 関数はGASWorkerにアプリケーションスクリプトの [Lock](https://developers.google.com/apps-script/reference/lock/lock) オブジェクトを提供する必要があります。
-* `GASWorker.getProperties` 関数はGASWorkerにアプリケーションスクリプトの [Properites](https://developers.google.com/apps-script/reference/properties/) オブジェクトを提供する必要があります。
+GASWorker.setup(gwConfig);
+```
 
-### Define doTask function
+* 最初に`GASWorker.setup()` 関数を呼び出して初期化を行います。
+引数には設定オブジェクトを指定します。設定オブジェクトについては [Define configuration object](#configObject) を参照してください。
 
-    GASWorker.doTask = function(token, userContext) {
-      Logger.log("doWork:" + new Date().toLocaleString() + "\n" + "token:" + token);
-      Utilities.sleep(10 * 1000);
-      token++;
-      return token < 30 ? token : null;
-    }
+* `getLock` 関数はGASWorkerにアプリケーションスクリプトの [Lock](https://developers.google.com/apps-script/reference/lock/lock) オブジェクトを提供する必要があります。
+* `getProperties` 関数はGASWorkerにアプリケーションスクリプトの [Properites](https://developers.google.com/apps-script/reference/properties/) オブジェクトを提供する必要があります。
 
-`GASWorker.doTask` には分割した処理を定義します。
-`GASWorker.doTask` は時間ベースのトリガーから呼び出されます。
+### <a name="configObject"> Define configuration object
 
-`GASWorker.doTask` の戻り値は、 `GASWorker.doTask` が次に呼び出される時の `token` 引数になります。
-`null`を返すと、 `GASWorker.doTask` は呼び出されなくなり、処理が終了します。
+設定オブジェクトには `GASWorker` からコールバックされる関数や
+ `GASWorker` が参照する値を設定します。
+
+#### Define doTask function
+
+```javascript
+doTask: function(token, userContext) {
+  Logger.log("doWork:" + new Date().toLocaleString() + "\n" + "token:" + token);
+  Utilities.sleep(10 * 1000);
+  token++;
+  return token < 30 ? token : null;
+}
+```
+
+`doTask` には分割した処理を定義します。
+`doTask` は時間ベースのトリガーから呼び出されます。
+
+`doTask` の戻り値は、 `doTask` が次に呼び出される時の `token` 引数になります。
+`null`を返すと、 `doTask` は呼び出されなくなり、処理が終了します。
 
 引数 `token` は 最初は `GASWorker.execute()` の引数が渡されます。
-その後は、直前に呼び出された `GASWorker.doTask` の戻り値が渡されます。
+その後は、直前に呼び出された `doTask` の戻り値が渡されます。
 
 引数 `userContext` は任意の値を追加・変更・削除できるオブジェクトです。
 `userContext` オブジェクトの寿命は Google Apps Script
@@ -56,50 +80,60 @@ GASWorker その分割された処理を時間ベースのトリガーを利用�
 
 注意:`GASWorker.doTask`は6分以内に終了するようにしてください。
 
-### Define beforeTasks function
+#### Define beforeTasks function
 
-    GASWorker.beforeTasks = function(token, userContext) {
-      Logger.log("Hook before trigger start.");
-    }
+```javascript
+beforeTasks: function(token, userContext) {
+  Logger.log("Hook before trigger start.");
+}
+```
 
 `beforeTasks` 関数の定義はオプションです。
 `beforeTasks` 関数を使ってタスクの開始前のタイミングをフックできます。
 
-### Define afterTasks function
+#### Define afterTasks function
 
-    GASWorker.afterTasks = function(token, userContext) {
-      Logger.log("Hook before trigger end.");
-    }
+```javascript
+afterTasks: function(token, userContext) {
+  Logger.log("Hook before trigger end.");
+}
+```
 
 `afterTasks` 関数の定義はオプションです。
 `afterTasks` 関数を使ってタスクの終了前のタイミングをフックできます。
 
+#### Define done function
+
+```javascript
+done: function() {
+  Logger.log("done() : cancelled=" + GASWorker.isCancelled());
+}
+```
+
+`GASWorker.execute`で開始した処理が終了すると`done`が呼び出されます。
+`done`の定義は任意です。定義しない場合は何もしません。
+
 ### Start Task
 
-    function start() {
-      Logger.log("execute() : " + GASWorker.execute(0));
-    }
+```javascript
+function start() {
+  Logger.log("execute() : " + GASWorker.execute(0));
+}
+```
 
 `GASWorker.execute` 関数を呼び出すと時間ベースのトリガーをインストールします。
-インストールしたトリガーから`GASWorker.doTask`関数が呼び出されます。
+インストールしたトリガーから`doTask`関数が呼び出されます。
 
 ### Cancel
 
-    function cancel() {
-      GASWorker.cancel();
-    }
+```javascript
+function cancel() {
+  GASWorker.cancel();
+}
+```
 
 `GASWorker.execute`で開始した処理を途中で終了する場合、
 `GASWorker.cancel()`関数を呼び出します。
-
-### Define done function
-
-    GASWorker.done = function() {
-      Logger.log("done() : cancelled=" + GASWorker.isCancelled());
-    }
-
-`GASWorker.execute`で開始した処理が終了すると`GASWorker.done`が呼び出されます。
-`GASWorker.done`の定義は任意です。定義しない場合は何もしません。
 
 ## Install
 

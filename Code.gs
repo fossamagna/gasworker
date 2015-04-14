@@ -5,20 +5,61 @@ var STATUS_STARTED_ = "STARTED";
 var STATUS_PAUSED_ = "PAUSED";
 var STATUS_DONE_ = "DONE";
 
-var config_ = {
+var userConfig_ = {
+  callbackTarget: null, /* required */
+  callback: "doInBackground",
   waitLockTimeout : 1 * 60 * 1000,
   triggerMinutes : 1,
   triggerTimeout : 4 * 60 * 1000,
-  callback: "doInBackground",
-  transactionType: 'tasks' /* task or tasks */
+  transactionType: 'tasks', /* task or tasks */
+
+  // lifecycle functions
+  /**
+   * Executed before the defined task is started at an TimeBased Trigger.
+   * It is before task is resumed.
+   */
+  beforeTasks: function(currentToken, userContext) {},
+  /**
+   * You can define the processes that have been divided into this function.
+   * @param {Object} currentToken return value of when doTask function previous call.
+   * @param {Object} userContext object where you can use add, modify and delete any value.
+   * @return {Object} the token argument of when doTask function the next call.
+   */
+  doTask: function(currentToken, userContext) { return false },
+  /**
+   * Executed after the defined task is ended at an TimeBased Trigger.
+   * It is before task paused.
+   */
+  afterTasks: function(currentToken, userContext) {},
+  /**
+   * Executed after the defined task is finished.
+   */
+  done: function() {},
+
+  // service provider functions
+  /**
+   * Provide Lock object to GASWroker.
+   * @return {Lock} lock object of application script
+   */
+  getLock: function() {},
+  /**
+   * Provide Properties object to GASWroker.
+   * @return {Properties} properties object of application script
+   */
+  getProperties: function() {}
 }
 
 /**
  * Set up for using GASWorker.
- * @param {Object} target global object of application script.
+ * @param {Object} userConfig configuration object for gasworker script.
  */
-function setup(target) {
-  target[config_.callback] = doInBackground_;
+function setup(userConfig) {
+  for (var attr in userConfig) {
+    if (userConfig.hasOwnProperty(attr)) {
+      userConfig_[attr] = userConfig[attr];
+    }
+  }
+  userConfig_.callbackTarget[userConfig_.callback] = doInBackground_;
 }
 
 /**
@@ -42,44 +83,6 @@ function execute(token) {
     setContext_(KEY_CONTEXT_, context);
     return true;
   });
-}
-
-/**
- * Executed before the defined task is started at an TimeBased Trigger.
- * It is before task is resumed.
- */
-function beforeTasks(token, userContext) {
-}
-
-/**
- * Executed after the defined task is ended at an TimeBased Trigger.
- * It is before task paused.
- */
-function afterTasks(token, userContext) {
-}
-
-/**
- * Executed after the defined task is finished.
- */
-function done() {
-}
-
-/**
- * Provide Lock object to GASWroker.
- * @return {Lock} lock object of application script
- */
-function getLock() {
-  //return LockService.getScriptLock();
-  return null;
-}
-
-/**
- * Provide Properties object to GASWroker.
- * @return {Properties} properties object of application script
- */
-function getProperties() {
-  //return PropertiesService.getScriptProperties();
-  return null;
 }
 
 function doInBackground_() {
@@ -121,7 +124,7 @@ function doInBackground_() {
         setContext_(identifier, context);
       });
     }
-    done();
+    userConfig_.done();
   }
 }
 
@@ -131,17 +134,17 @@ function doTasks_(identifier, token, starttime) {
   var userContext = {};
 
   // Hook before doTasks_
-  beforeTasks(currentToken, userContext);
+  userConfig_.beforeTasks(currentToken, userContext);
 
   // Run time-consuming tasks.
-  while (new Date().getTime() - starttime < config_.triggerTimeout) {
+  while (new Date().getTime() - starttime < userConfig_.triggerTimeout) {
     if (isCancelled_(identifier)) {
       return null;
     }
     currentToken = nextToken || token;
-    nextToken = doTask(currentToken, userContext);
+    nextToken = userConfig_.doTask(currentToken, userContext);
     if (nextToken) {
-      if (config_.transactionType === 'task') {
+      if (userConfig_.transactionType === 'task') {
         callWithLock_(function() {
           setToken_(identifier, nextToken);
         });
@@ -152,13 +155,13 @@ function doTasks_(identifier, token, starttime) {
   }
 
   // Hook after doTasks_
-  afterTasks(currentToken, userContext);
+  userConfig_.afterTasks(currentToken, userContext);
   return nextToken;
 }
 
 function callWithLock_(callback, waitLockTimeout) {
-  var timeoutInMillis = waitLockTimeout || config_.waitLockTimeout;
-  var lock = getLock();
+  var timeoutInMillis = waitLockTimeout || userConfig_.waitLockTimeout;
+  var lock = userConfig_.getLock();
   lock.waitLock(timeoutInMillis);
   try {
     return callback();
@@ -182,9 +185,9 @@ function deleteTrigger_(uniqueId) {
 }
 
 function putNextTrigger_() {
-  var trigger = ScriptApp.newTrigger(config_.callback)
+  var trigger = ScriptApp.newTrigger(userConfig_.callback)
     .timeBased()
-    .everyMinutes(config_.triggerMinutes)
+    .everyMinutes(userConfig_.triggerMinutes)
     .create();
   return trigger.getUniqueId();
 }
@@ -211,7 +214,7 @@ function isCancelled_(identifier) {
 }
 
 function getContext_(identifier) {
-  var value = getProperties().getProperty(identifier);
+  var value = userConfig_.getProperties().getProperty(identifier);
   if (!value) {
     return null;
   }
@@ -219,7 +222,7 @@ function getContext_(identifier) {
 }
 
 function setContext_(identifier, context) {
-  getProperties().setProperty(identifier, JSON.stringify(context));
+  userConfig_.getProperties().setProperty(identifier, JSON.stringify(context));
 }
 
 function setContextValue_(identifier, name, value) {

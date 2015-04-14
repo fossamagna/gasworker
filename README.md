@@ -20,84 +20,115 @@ GASWorker calls the divided processing by using the time-based trigger.
 
 ### Initialize
 
-    GASWorker.setup(this);
+```javascript
+var gwConfig = {
+  callbackTarget: this,
 
-    GASWorker.getLock = function() {
-      return LockService.getScriptLock();
-    }
+  doTask: function(token, userContext) {
+    var cell = userContext.sheet.getRange(token + 1, 1);
+    cell.setValue("doTask:" + new Date().toLocaleString() + "\n" + "token:" + token);
+    SpreadsheetApp.flush();
+    Utilities.sleep(10 * 1000);
+    token++;
+    return token < 30 ? token : null;
+  },
 
-    GASWorker.getProperties = function() {
-      return PropertiesService.getScriptProperties();
-    }
+  getProperties: function() {
+    return PropertiesService.getScriptProperties();
+  },
+  getLock: function() {
+    return LockService.getScriptLock();
+  }
+};
 
-* `GASWorker.getLock` function have to provides [Lock](https://developers.google.com/apps-script/reference/lock/lock) object to GASWroker from App Script.
-* `GASWorker.getProperties` function have to provides [Properites](https://developers.google.com/apps-script/reference/properties/) object to GASWroker from App Script.
+GASWorker.setup(gwConfig);
+```
+* First, you must call `GASWorker.setup()` function in order to initialize. And, you must set argument of 'GASWorker.setup()' function as configuration object.
+See [Define configuration object](#configObject) details of configuration object.
+* `getLock` function have to provides [Lock](https://developers.google.com/apps-script/reference/lock/lock) object to GASWroker from App Script.
+* `getProperties` function have to provides [Properites](https://developers.google.com/apps-script/reference/properties/) object to GASWroker from App Script.
 
-### Define doTask function
+### <a name="configObject"> Define configuration object
 
-    GASWorker.doTask = function(token, userContext) {
-      Logger.log("doWork:" + new Date().toLocaleString() + "\n" + "token:" + token);
-      Utilities.sleep(10 * 1000);
-      token++;
-      return token < 30 ? token : null;
-    }
+In configuration object, define used callback functions and values by `GASWorker`.
 
-You can define the processes that have been divided into `GASWorker.doTask`.
-`GASWorker.doTask` will be called from time-based trigger.
+#### Define doTask function
 
-Return value of `GASWorker.doTask` that will be the `token` argument of when the` GASWorker.doTask` the next call.
-If you return the `null`,` GASWorker.doTask` is no longer called, processing is terminated.
+```javascript
+doTask: function(token, userContext) {
+  Logger.log("doWork:" + new Date().toLocaleString() + "\n" + "token:" + token);
+  Utilities.sleep(10 * 1000);
+  token++;
+  return token < 30 ? token : null;
+}
+```
+
+You can define the processes that have been divided into `doTask`.
+`doTask` will be called from time-based trigger.
+
+Return value of `doTask` that will be the `token` argument of when the` doTask` the next call.
+If you return the `null`,` doTask` is no longer called, processing is terminated.
 
 Argument of `doTask` function are initially passed `GASWorker.execute ()` argument.
 
 `userContext` is object where you can use add, modify and delete any value.
-Life of userContext is same to Google Apps Script process. You can build any userContext object by to override `buildUserContext` function.
+Life of userContext is same to Google Apps Script process.
 
-Note : Process in `GASWorker.doTask` must be make to be completed within 6 minutes.
+Note : Process in `doTask` must be make to be completed within 6 minutes.
 
-### Define beforeTasks function
+#### Define beforeTasks function
 
-    GASWorker.beforeTasks = function(token, userContext) {
-      Logger.log("Hook before trigger start.");
-    }
+```javascript
+beforeTasks: function(token, userContext) {
+  Logger.log("Hook before trigger start.");
+}
+```
 
 It is optional that to define `beforeTasks` function.
 You can hook before start tasks using `beforeTasks` function.
 
-### Define afterTasks function
+#### Define afterTasks function
 
-    GASWorker.afterTasks = function(token, userContext) {
-      Logger.log("Hook before trigger end.");
-    }
+```javascript
+afterTasks: function(token, userContext) {
+  Logger.log("Hook before trigger end.");
+}
+```
 
 It is optional that to define `afterTasks` function.
 You can hook before end tasks using `afterTasks` function.
 
+#### Define done function
+
+```javascript
+done: function() {
+  Logger.log("done() : cancelled=" + GASWorker.isCancelled());
+}
+```
+
+`done` is called when processing started is completed `GASWorker.execute`.
+`done` function is optional.
+
 ### Start Task
 
-    function start() {
-      Logger.log("execute() : " + GASWorker.execute(0));
-    }
+```javascript
+function start() {
+  Logger.log("execute() : " + GASWorker.execute(0));
+}
+```
 
 If you call the `GASWorker.execute` function to install a time-based trigger.
-`GASWorker.doTask` function is called from the installed trigger.
+`doTask` function is called from the installed trigger.
 
 ### Cancel
 
-    function cancel() {
-      GASWorker.cancel();
-    }
+```javascript
+function cancel() {
+  GASWorker.cancel();
+}
+```
 
 If you want to cancel the process that are started in `GASWorker.execute`, call the `GASWorker.cancel` function.
-
-### Define done function
-
-    GASWorker.done = function() {
-      Logger.log("done() : cancelled=" + GASWorker.isCancelled());
-    }
-
-`GASWorker.done` is called when processing started is completed `GASWorker.execute`.
-`GASWorker.done` function is optional.
 
 ## Install
 
