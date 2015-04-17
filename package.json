@@ -1,6 +1,6 @@
 {
   "name": "gasworker",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "GASWorker is a library for the script that requires a long run in the Google Apps Script.",
   "main": "gasworker.js",
   "scripts": {
