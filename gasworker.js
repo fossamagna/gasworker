@@ -123,8 +123,8 @@ function doInBackground_() {
         context.status = STATUS_DONE_;
         setContext_(identifier, context);
       });
+      userConfig_.done();
     }
-    userConfig_.done();
   }
 }
 
