@@ -1,6 +1,4 @@
-GASWorker
-[![NPM version][npm-image]][npm-url]
-====
+# GASWorker [![NPM version][npm-image]][npm-url]
 
 GASWorker is a library for the script that requires a long run in the Google Apps Script.
 
@@ -139,7 +137,7 @@ If you want to cancel the process that are started in `GASWorker.execute`, call 
 $ npm install gas-worker --save
 ```
 
-I recommend to use it with [Browserify](http://browserify.org/ga) and [gasify](https://www.npmjs.com/package/gasify).
+I recommend to use it with [Browserify](http://browserify.org) and [gasify](https://www.npmjs.com/package/gasify).
 
 ### Library on Apps Script
 

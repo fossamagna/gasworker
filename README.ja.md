@@ -1,6 +1,4 @@
-GASWorker
-[![NPM version][npm-image]][npm-url]
-====
+# GASWorker [![NPM version][npm-image]][npm-url]
 
 GASWorker は Google Apps Script で長時間の実行を必要とするスクリプトのためのライブラリです。
 
@@ -144,7 +142,7 @@ function cancel() {
 $ npm install gas-worker --save
 ```
 
-[Browserify](http://browserify.org/ga)、 [gasify](https://www.npmjs.com/package/gasify) と一緒に使うことをお勧めします。
+[Browserify](http://browserify.org)、 [gasify](https://www.npmjs.com/package/gasify) と一緒に使うことをお勧めします。
 
 ### ライブラリとして使う
 
