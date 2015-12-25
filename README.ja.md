@@ -160,5 +160,5 @@ Google Apps Script の[ライブラリ](https://developers.google.com/apps-scrip
 
 [fossamagna](https://github.com/fossamagna)
 
-[npm-image]: https://badge.fury.io/js/gas-worker.svg
-[npm-url]: https://npmjs.org/package/gas-worker
+[npm-image]: https://badge.fury.io/js/gasworker.svg
+[npm-url]: https://npmjs.org/package/gasworker

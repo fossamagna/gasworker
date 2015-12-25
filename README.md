@@ -155,5 +155,5 @@ You can use it as a [Library](https://developers.google.com/apps-script/guide_li
 
 [fossamagna](https://github.com/fossamagna)
 
-[npm-image]: https://badge.fury.io/js/gas-worker.svg
-[npm-url]: https://npmjs.org/package/gas-worker
+[npm-image]: https://badge.fury.io/js/gasworker.svg
+[npm-url]: https://npmjs.org/package/gasworker
