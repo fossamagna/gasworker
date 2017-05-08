@@ -2,6 +2,8 @@ GASWorker
 [![NPM version][npm-image]][npm-url]
 ====
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/fossamagna/gasworker.svg)](https://greenkeeper.io/)
+
 GASWorker is a library for the script that requires a long run in the Google Apps Script.
 
 *Read this in other languages: [English](README.md), [日本語](README.ja.md).*
